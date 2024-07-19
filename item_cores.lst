@@ -1,0 +1,7 @@
+Item,Description,Effect,Modifier
+Ring of Protection,Grants its wearer some protection from their enemies' attacks,protection,5
+Potion of Healing,Restores 20 HP after being consumed,healing,20
+Short Sword,Slightly enhances one's combat capabilities,weapon,5
+Bastard Sword,Enhances one's combat capabilities,weapon,10
+Long Sword,Greatly enhances one's combat capabilities,weapon,15
+Zweihander,Vastly enhances one's combat capabilities,weapon,20
