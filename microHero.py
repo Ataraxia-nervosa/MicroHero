@@ -20,6 +20,7 @@ Postfixes = []
 EnemyMolds = []
 Monsters = []
 Encounters = []
+Monsters = []
 
 Player = None
 
@@ -64,24 +65,17 @@ class Character:
                 Inventory: {self.Inventory}"""  
 
 class Enemy:
-    def __init__(self, Name, MinHP, MaxHP, Vocation, MinStr, MaxStr, MinInt, MaxInt, MinFai, MaxFai, MinDmgMin, MinDmgMax, MaxDmgMin, MaxDmgMax,
-                 ProtMin, ProtMax, Tier, Exp):
+    def __init__(self, Name, HP, Vocation, Str, Int, Fai, MinDmg, MaxDmg, Prot, Tier, Exp):
         self.Name = Name
-        self.MinHp = MinHP
-        self.MaxHP = MaxHP
+        self.HP = HP
+        self.FullHP = HP
         self.Vocation = Vocation
-        self.MinStr = MinStr
-        self.MaxStr = MaxStr
-        self.MinInt = MinInt
-        self.MaxInt = MaxInt
-        self.MinFai = MinFai
-        self.MaxFai = MaxFai
-        self.MinDmgMin = MinDmgMin
-        self.MinDmgMax = MinDmgMax
-        self.MaxDmgMin = MaxDmgMin
-        self.MaxDmgMax = MaxDmgMax
-        self.ProtMin = ProtMin
-        self.ProtMax = ProtMax
+        self.Str = Str
+        self.Int = Int
+        self.Fai = Fai
+        self.MinDmg = MinDmg
+        self.MaxDmg = MaxDmg
+        self.Prot = Prot
         self.Tier = Tier
         self.Exp = Exp
 
@@ -282,12 +276,41 @@ def welcome():
           on which your champion will become stronger and stronger.
           Help them overcome untold dangers, share in their loot,
           equip them and guide them to riches and glory!""")
-    
-    time.sleep(4)
 
     start = input("\n         Onwards! Press 'Enter' to continue... ")
 
-    choose_encounter()
+    main_menu()
+
+def main_menu():
+    if EncounterCounter == 0:
+        print(f"\nYou, a young {Player.Char.Vocation}, have left your past behind.")
+        print("Friends, family, the easy country life — not for you.")
+        print("You've heard the call of the open road for as long as you can remember.")
+        print("Now, it is finally before you — broad and endless.")
+        print("What adventure awaits ahead? Only one way to find out...")
+    
+    print("\n1. Onwards!")
+    print("2. Check your character sheet")
+    print("3. Look at your inventory")
+    print("4. Use an ability")
+    print("5. Quit the adventure")
+
+    choice = input("\nWhat would you like to do? ")
+    while int(choice) not in range(1,7):
+        choice = input("\nPlease, pick a valid number... ")
+    match choice:
+        case "1":
+            choose_encounter()
+        case "2":
+            open_character()
+        case "3":
+            open_inventory()
+        case "4":
+            choose_ability()
+        case "5":
+            print("\nVery well. Come back when you feel adventurous again... ")
+            time.sleep(3)
+            exit()
 
 def choose_encounter():
     global EncounterCounter
@@ -295,7 +318,7 @@ def choose_encounter():
     global PositiveEncounters
 
     EncounterCounter += 1
-    if (random.randint(1,100) - Player.Char.Fai) <= 99:
+    if (random.randint(1,100) - Player.Char.Fai) <= 30:
         PositiveEncounters += 1
         encounter()
     else:
@@ -467,63 +490,83 @@ def level_up():
         match Char.Vocation:
             case "Barbarian":
                 print(f"\n{Char.Name} is now Level {Char.Level}!")
+                NewHP = random.randint(1, 8)
                 NewStr = random.randint(1,3)
                 NewFai = random.randint(1,2)
                 NewMinDmg = random.randint(2,7)
                 NewMaxDmg = random.randint(2,7)
+                Char.FullHP += NewHP
+                Char.HP = Char.FullHP
                 Char.Str += NewStr
                 Char.Fai += NewFai
                 Char.MinDmg += NewMinDmg
                 Char.MaxDmg += NewMaxDmg
-                print(f"\n[STR: +{NewStr}]")
+                print(f"\n[HP: +{NewHP}]")
+                print(f"[STR: +{NewStr}]")
                 print(f"[FAI: +{NewFai}]")
                 print(f"[Min.DMG: +{NewMinDmg}]")
                 print(f"[Max.DMG: +{NewMaxDmg}]")
             case "Wizard":
                 print(f"\n{Char.Name} is now Level {Char.Level}!")
+                NewHP = random.randint(1,4)
                 NewInt = random.randint(2,5)
                 NewMinDmg = random.randint(4,7)
                 NewMaxDmg = random.randint(5,10)
+                Char.FullHP += NewHP
+                Char.HP = Char.FullHP
                 Char.Int += NewInt
                 Char.MinDmg += NewMinDmg
                 Char.MaxDmg += NewMaxDmg
-                print(f"\n[INT: +{NewInt}]")
+                print(f"\n[HP: +{NewHP}]")
+                print(f"[INT: +{NewInt}]")
                 print(f"[Min.DMG: +{NewMinDmg}]")
                 print(f"[Max.DMG: +{NewMaxDmg}]")
             case "Warrior":
                 print(f"\n{Char.Name} is now Level {Char.Level}!")
+                NewHP = random.randint(2,12)
                 NewStr = random.randint(1,2)
                 NewFai = random.randint(0,1)
                 NewProt = random.randint(3,7)
+                Char.FullHP += NewHP
+                Char.HP = Char.FullHP
                 Char.Str += 2
                 Char.Fai += 1
                 Char.Prot += 5
-                print(f"\n[STR: +{NewStr}]")                
+                print(f"\n[HP: +{NewHP}]")
+                print(f"[STR: +{NewStr}]")                
                 if NewFai > 0:
                     print(f"[FAI: +{NewFai}]")
                 print(f"[Prot.: +{NewProt}]")
             case "Cleric":
                 print(f"\n{Char.Name} is now Level {Char.Level}!")
+                NewHP = random.randint(2,8)
                 NewFai = random.randint(2,3)
                 NewMinDmg = random.randint(2,4)
                 NewMaxDmg = random.randint(2,4)
+                Char.FullHP += NewHP
+                Char.HP = Char.FullHP
                 Char.Fai += 3
                 Char.MinDmg += 2
                 Char.MaxDmg += 2
-                print(f"\n[FAI: +{NewFai}]")
+                print(f"\n[HP: +{NewHP}]")
+                print(f"[FAI: +{NewFai}]")
                 print(f"Min.DMG: +{NewMinDmg}")
                 print(f"Max.DMG: +{NewMaxDmg}")
             case "Necromancer":
                 print(f"\n{Char.Name} is now Level {Char.Level}!")
+                NewHP = random.randint(1,4)
                 NewInt = random.randint(1,4)
                 NewMinDmg = random.randint(2,5)
                 NewMaxDmg = random.randint(3,8)
                 NewMaxSouls = random.randint(0,1)
+                Char.FullHP += NewHP
+                Char.HP = Char.FullHP
                 Char.Int += 2
                 Char.MinDmg += 2
                 Char.MaxDmg += 4
                 Char.MaxSouls += 1
-                print(f"\n[INT: +{NewInt}]")
+                print(f"\n[HP: +{NewHP}]")
+                print(f"[INT: +{NewInt}]")
                 print(f"[Min.DMG: +{NewMinDmg}]")
                 print(f"[Max.DMG: +{NewMaxDmg}]")
                 if NewMaxSouls > 0:
@@ -534,16 +577,249 @@ def level_up():
     choose_encounter()
 
 def battle():
+    check = Player.Char.Level
+    if check < 5:
+        Tier = 1
+        Amount = 1
+    elif check >=5 and check <10:
+        Tier = 1
+        Amount = 2
+    elif check >= 10 and check < 15:
+        Tier = 1
+        Amount = 3
+    elif check >= 15 and check < 25:
+        Tier = 2
+        Amount = 1
+    elif check >= 25 and check < 30:
+        Tier = 2
+        Amount = 2
+    elif check >= 30 and check < 40:
+        Tier = 2
+        Amount = 3
+    elif check >= 40:
+        Tier = 3
+        Amount = 1
+
+    create_monster(Tier, Amount)
+
+    CoinFlip = random.randint(0,1)
+
+    if CoinFlip == 0: player_turn()
+    else: monster_turn()
+
+def player_turn():
+    print("\nYou stumbled upon some monsters. It's time for battle!")
+    print("Your adversaries:")
+    count = 1
+    for Element in Monsters:
+        print(f"""\n{count}. {Element.Name}
+              HP: {Element.HP} / {Element.FullHP}""")
+    Choice = input("\nWould you like to [a]ttack, [u]se an item, use an a[b]ility or [r]etreat? ")
+    while Choice != "a" or Choice != "u" or Choice != "b" or Choice != "r":
+        Choice = input("\n[a]ttack, [u]se an item, use an a[b]ility or [r]etreat? ")
+
+    # Переписать матч в if-else
+    match Choice:
+        case "a":
+            if len(Monsters) > 1:
+                Choice = input("\nWhich enemy would you like to attack? ")
+                while int(Choice) not in range(1, len(Monsters)):
+                    Choice = input("\nPlease, enter a valid number... ")
+                Dmg = calculate_dmg(Player.Char, Monsters[Choice-1])
+                Monsters[Choice-1].HP -= Dmg
+                print(f"\n{Player.Char.Name} attacks {Monsters[Choice-1]} for {Dmg} dmg")
+                if Monsters[Choice-1].HP <= 0:
+                    victory()
+                else:
+                    print(f"\n{Monsters[Choice-1]} is now at {Monsters[Choice-1].HP} HP")
+                    time.sleep(3)
+                    monster_turn()
+            else:
+                Dmg = calculate_dmg(Player.Char, Monsters[0])
+                Monsters[0].HP -= Dmg
+                print(f"\n{Player.Char.Name} attacks {Monsters[Choice-1]} for {Dmg} dmg")
+                if Monsters[0].HP <= 0:
+                    victory()
+                else:
+                    print(f"\n{Monsters[Choice-1]} is now at {Monsters[Choice-1].HP} HP")
+                    time.sleep(3)
+                    monster_turn()
+        case "u":
+            if Player.Char.InventorySize == 0:
+                print("\nYou don't have anything.")
+                time.sleep(3)
+                player_turn()
+            
+            print(f"\nINVENTORY")
+            Num = 1
+            for Item in Player.Char.Inventory:
+                print(f"""\n{Num}. {Item.Name}
+{Item.Prefix.Name}: {Item.Prefix.Description}
+{Item.Core.Name}: {Item.Core.Description}
+{Item.Postfix.Name}: {Item.Postfix.Description}""")     
+
+            Choice = input("Which item would you like to use? Enter '0' to go back... ") 
+            while Choice not in range (0, len(Player.Char.Inventory)):
+                Choice = input("Please, pick a valid number or enter '0; to go back... ")
+            if Choice == "0":
+                player_turn()
+            else:
+                if Player.Char.Inventory[int(Choice)-1].Location != "heal" or Player.Char.Inventory[int(Choice)-1].Location != "buff":
+                    back = input(f"{Player.Char.Inventory[int(Choice)-1]} is not usable. Press 'Enter' to go back... ")
+                    player_turn()
+                elif Player.Char.Inventory[int(Choice)-1].Location == "heal":
+                    use_heal(Player.Char.Inventory[int(Choice)-1], "battle")
+                elif Player.Char.Inventory[int(Choice)-1].Location == "buff":
+                    use_buff(Player.Char.Inventory[int(Choice)-1], "battle")
+        case "b":
+            use_ability("peace")
+        case "r":
+            retreat()
+
+def monster_turn():
+    for Element in Monsters:
+        Dmg = calculate_dmg(Element, Player.Char)
+        Player.Char.HP -= Dmg
+        print(f"\n{Element.Name} attacks {Player.Char.Name} for {Dmg} dmg")
+        if Player.Char.HP <= 0:
+            defeat()
+        else:
+            print(f"{Player.Char.Name} is now at {Player.Char.HP} HP")
+            time.sleep(3)
+            player_turn()
+
+def use_ability(status):
     pass
 
-def create_monster():
-    Num = random.randint(0,len(EnemyMolds)-1)
-    Stats = EnemyMolds[Num]
-    Monster = Enemy(Stats[0], Stats[1], Stats[2], Stats[3], Stats[4], Stats[5],
-                    Stats[6], Stats[7], Stats[8], Stats[9], Stats[10], Stats[11],
-                    Stats[12], Stats[13], Stats[14], Stats[15], Stats[16], Stats[17])
-    print(f"{Monster} joins the fray!") 
-    return Monster
+def retreat():
+    pass
+
+def calculate_dmg(Attacker, Defender):
+    if Attacker.Vocation == "Barbarian" or Attacker.Vocation == "Warrior":
+        InitialDmg = random.randint(Attacker.MinDmg, Attacker.MaxDmg) + int(Attacker.Str * 0.2)
+    elif Attacker.Vocation == "Wizard":
+        InitialDmg = random.randint(Attacker.MinDmg, Attacker.MaxDmg) + int(Attacker.Int * 0.2)
+    elif Attacker.Vocation == "Cleric":
+        InitialDmg = random.randint(Attacker.MinDmg, Attacker.MaxDmg) + int(Attacker.Fai * 0.2)
+    elif Attacker.Vocation == "Necromancer":
+        InitialDmg = random.randint(Attacker.MinDmg, Attacker.MaxDmg) + int(Attacker.Int * 0.1)
+
+    Dmg = InitialDmg - int(Defender.Prot * 0.3)
+    
+    return Dmg
+
+def victory():
+    pass
+
+def defeat():
+    pass
+
+def open_character():
+    print(f"""\n{Player.Char.Name}, the {Player.Char.Vocation}
+Level: {Player.Char.Level}
+Exp: {Player.Char.Exp} / {Player.Char.ToLevel}
+
+HP: {Player.Char.HP} / {Player.Char.MaxHP}
+
+STR: {Player.Char.Str}
+INT: {Player.Char.Int}
+FAI: {Player.Char.Fai}
+
+Dmg: {Player.Char.MinDmg}—{Player.Char.MaxDmg}
+Prot: {Player.Char.Prot}""")
+    
+    GoOn = input("Press 'Enter' to go back... ")
+    main_menu()
+
+def open_inventory():
+    print(f"\nINVENTORY")
+    Num = 1
+    for Item in Player.Char.Inventory:
+        print(f"""\n{Num}. {Item.Name}
+{Item.Prefix.Name}: {Item.Prefix.Description}
+{Item.Core.Name}: {Item.Core.Description}
+{Item.Postfix.Name}: {Item.Postfix.Description}""")
+    
+    choice = input("Would you like to [d]iscard an item, [u]se one or go [b]ack? ")
+    while choice != "d" and choice != "u" and choice != "b":
+        choice = input("\nChoose: [d]iscard, [u]se or go [b]ack? ")
+    match choice:
+        case "b":
+            main_menu()
+        case "u":
+            if Player.Char.InventorySize == 0:
+                choice = input("\nYou don't have anything. Press 'Enter' to go back... ")
+                main_menu()
+            else:
+                choice = input("\nWhat would you like to use? Enter '0' to go back. ")
+                while int(choice) not in range(0, Player.Char.InventorySize+1):
+                    choice = input("\nPlease, enter a valid number or '0' to go back... ")
+                if choice == "0":
+                    open_inventory()
+                else:
+                    x = int(choice)
+                    if Player.Char.Inventory[x-1].Location != "heal" or Player.Char.Inventory[x-1].Location != "buff":
+                        choice = input(f"\nThe {Player.Char.Inventory[x-1].Location} is not usable in this way. Press 'Enter' to go back... ")
+                        open_inventory()
+                    elif Player.Char.Inventory[x-1].Location == "heal":
+                        use_heal(Player.Char.Inventory[x-1], "peace")
+                    elif Player.Char.Inventory[x-1].Location == "buff":
+                        use_buff(Player.Char.Inventory[x-1], "peace")
+        case "d":
+            if Player.Char.InventorySize == 0:
+                choice = input("\nYou don't have anything. Press 'Enter' to go back... ")
+                main_menu()
+            else:
+                choice = input("\nWhat would you like to discard? Enter '0' to go back. ")
+                while choice not in range(0, Player.Char.InventorySize+1):
+                    choice = input("\nPlease, enter a valid number or '0' to go back... ")
+                if choice == "0":
+                    open_inventory()
+                else:
+                    x = int(choice)
+                    sure = input(f"\nAre you sure? The {Player.Char.Inventory[x-1]} will be lost forever. [y/n]")
+                    while sure != "y" and sure != "n":
+                        sure = input("\fPlease, say either 'y' or 'n'... ")
+                    if sure == "y":
+                        print(f"\n{Player.Char.Inventory[x-1]} has been discarded.")
+                        ToDelete = Player.Char.Inventory[x-1]
+                        Player.Char.Inventory.remove(Player.Char.Inventory[x-1])
+                        del ToDelete
+                        open_inventory()
+
+def choose_ability():
+    pass
+
+def use_heal(item, status):
+    pass
+
+def use_buff(item, status):
+    pass
+
+def create_monster(Tier=1, Amount=1):
+    Count = 1
+    TempMonsters = []
+    while Count <= Amount:
+        for Candidate in EnemyMolds:
+            if int(Candidate[16]) <= Tier:
+                TempMonsters.append(Candidate)            
+        Num = random.randint(0,len(TempMonsters)-1)
+        Stats = TempMonsters[Num]
+        MonsterName = Stats[0]
+        MonsterHP = random.randint(int(Stats[1]), int(Stats[2]))
+        MonsterVocation = Stats[3]
+        MonsterStr = random.randint(int(Stats[4]), int(Stats[5]))
+        MonsterInt = random.randint(int(Stats[6]), int(Stats[7]))
+        MonsterFai = random.randint(int(Stats[8]), int(Stats[9]))
+        MonsterMinDmg = random.randint(int(Stats[10]), int(Stats[11]))
+        MonsterMaxDmg = random.randint(int(Stats[12]), int(Stats[13]))
+        MonsterProt = random.randint(int(Stats[14]), int(Stats[15]))
+        MonsterTier = int(Stats[16])
+        MonsterExp = int(Stats[17])
+        Monster = Enemy(MonsterName, MonsterHP, MonsterVocation, MonsterStr, MonsterInt, MonsterFai, MonsterMinDmg, MonsterMaxDmg, MonsterProt, MonsterTier, MonsterExp)
+        print(f"{Monster} joins the fray!") 
+        Monsters.append(Monster)
+        Count += 1
 
 def create_item(PrefixNum=None, CoreNum=None, PostfixNum=None):
     if PrefixNum == None or CoreNum == None or PostfixNum == None:
