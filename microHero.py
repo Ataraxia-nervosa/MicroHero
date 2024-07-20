@@ -52,17 +52,16 @@ class Character:
         self.Level = Level
 
     def __repr__(self):
-        return f"""
-                {self.Name} / The {self.Vocation}
-                HP: {self.HP} / {self.MaxHP}
-                STR: {self.Str}
-                INT: {self.Int}
-                FAI: {self.Fai}
-
-                DMG: {self.MinDmg}—{self.MaxDmg}
-                Prot: {self.Prot}
+        return f"""{self.Name} / The {self.Vocation}
+        HP: {self.HP} / {self.MaxHP}
+        STR: {self.Str}
+        INT: {self.Int}
+        FAI: {self.Fai}
+        
+        DMG: {self.MinDmg}—{self.MaxDmg}
+        Prot: {self.Prot}
                 
-                Inventory: {self.Inventory}"""  
+        Inventory: {self.Inventory}"""  
 
 class Enemy:
     def __init__(self, Name, HP, Vocation, Str, Int, Fai, MinDmg, MaxDmg, Prot, Tier, Exp):
@@ -352,13 +351,13 @@ def encounter():
             print(f"\n[+{Gold} gold]")
         case "item", "small":
             FoundItem = find_item("small")
-            CheckForSpace(FoundItem)
+            Grab = CheckForSpace(FoundItem)
         case "item", "mid":
             FoundItem = find_item("mid")
-            CheckForSpace(FoundItem)
+            Grab = CheckForSpace(FoundItem)
         case "item", "large":
             FoundItem = find_item("large")
-            CheckForSpace(FoundItem)
+            Grab = CheckForSpace(FoundItem)
         case "exp", "small":
             ExpGain = int(25 + Player.Char.ToLevel * 0.2)
             Player.Char.Exp += ExpGain
@@ -376,7 +375,7 @@ def encounter():
             CheckExp = level_up()
 
     GoOn = input("\nPress 'Enter' to continue... ")
-    choose_encounter()
+    main_menu()
 
 def find_item(amount):
     global ItemsFound
@@ -455,12 +454,10 @@ def CheckForSpace(FoundItem):
             Player.Char.Inventory.append(FoundItem)
             print(f"\n[+ {FoundItem}]")
             input("Press 'Enter' to continue... ")
-            choose_encounter()
         if keep == "n":
             print(f"\nYou decide to leave the {FoundItem} alone, and continue on your way.")
             del FoundItem
             input("\nPress 'Enter' to continue... ")
-            choose_encounter()
     else:
         print("\nThere is no room in your inventory. Would you like to discard something?")
         count = 1
@@ -475,13 +472,11 @@ def CheckForSpace(FoundItem):
             if Discard == "0":
                 print(f"\nYou decide that you don't need the {FoundItem.Name}, and continue your journey.")
                 GoOn = input("Press 'Enter' to continue... ")
-                choose_encounter()
             else:
                 ItemsKept += 1
                 Player.Char.Inventory.append(FoundItem)
                 print(f"\n[+ {FoundItem.Name}]")
-                GoOn = input("Press 'Enter' to continue... ")
-                choose_encounter()
+                GoOn = input("Press 'Enter' to continue... ")    
 
 def level_up():
     while Player.Char.Exp >= Player.Char.ToLevel:
@@ -678,9 +673,9 @@ def player_turn():
                 elif Player.Char.Inventory[int(Choice)-1].Location == "buff":
                     use_buff(Player.Char.Inventory[int(Choice)-1], "battle")
         case "b":
-            use_ability("peace")
+            ability = use_ability()
         case "r":
-            retreat()
+            flee = retreat()
 
 def monster_turn():
     for Element in Monsters:
@@ -717,10 +712,67 @@ def calculate_dmg(Attacker, Defender):
     return Dmg
 
 def victory():
-    pass
+    print("\nYou have prevailed! Your reward is:")
+    Money = int(random.randint(Player.Char.ToLevel / 8, Player.Char.ToLevel / 4))
+    Player.Char.Gold += Money
+    print(f"[{Money} gold]")
+    ItemRoll = random.randint(1, 100)
+    check = Player.Char.Level
+    if check < 15:
+        Tier = 1
+    elif check >= 15 and check < 40:
+        Tier = 2
+    elif check >= 40:
+        Tier = 3
+
+    if ItemRoll <= 20:
+        match Tier:
+            case 1:
+                Reward = find_item("small")
+            case 2:
+                Reward = find_item("mid")
+            case 3:
+                Reward = find_item("large")
+
+        Grab = CheckForSpace(Reward)
+
+    GoOn = input("Press 'Enter' to continue... ")
+    main_menu
 
 def defeat():
-    pass
+    global EncounterCounter
+    global PositiveEncounters
+    global Battles
+    global ItemsFound
+    global ItemsKept
+    global GoldAcquired
+
+    print("\nYOU HAVE BEEN DEFEATED!")
+    print("\nYour champion was...")
+    print(f"{Player.Char}")
+    print(f"""\nDuring your travels you had {EncounterCounter} encounters.
+    {PositiveEncounters} of them were peaceful.
+    {Battles} of them were battles.
+    You found {ItemsFound} items and kept {ItemsKept} of them.
+    You also acquired {GoldAcquired} gold.""")
+
+    EncounterCounter = 0
+    PositiveEncounters = 0
+    Battles = 0
+    ItemsFound = 0
+    ItemsKept = 0
+    GoldAcquired = 0
+
+    Again = input("\nWould you like to play again? [y/n]")
+    while Again not in ("y", "n"):
+        Again = input("Please, say either 'y' or 'n'... ")
+    if Again == "y":
+        create_character()
+        main_menu()
+    else:
+        print("Thank you for playing! Hope to see you again soon.")
+        time.sleep(2)
+        exit()
 
 def open_character():
     print(f"""\n{Player.Char.Name}, the {Player.Char.Vocation}
