@@ -363,17 +363,17 @@ def encounter():
             ExpGain = int(25 + Player.Char.ToLevel * 0.2)
             Player.Char.Exp += ExpGain
             print(f"[+ {ExpGain}] exp")
-            level_up()
+            CheckExp = level_up()
         case "exp", "mid":
             ExpGain = int(100 + Player.Char.ToLevel * 0.5)
             Player.Char.Exp += ExpGain
             print(f"[+ {ExpGain}] exp")
-            level_up()
+            CheckExp = level_up()
         case "exp", "large":
             ExpGain = int(500 + Player.Char.ToLevel * 0.7)
             Player.Char.Exp += ExpGain
             print(f"[+ {ExpGain}] exp")
-            level_up()
+            CheckExp = level_up()
 
     GoOn = input("\nPress 'Enter' to continue... ")
     choose_encounter()
@@ -484,9 +484,10 @@ def CheckForSpace(FoundItem):
                 choose_encounter()
 
 def level_up():
-    if Player.Char.Exp >= Player.Char.ToLevel:
+    while Player.Char.Exp >= Player.Char.ToLevel:
         Char = Player.Char
         Char.Level += 1
+        Char.ToLevel += Char.ToLevel * 0.5
         match Char.Vocation:
             case "Barbarian":
                 print(f"\n{Char.Name} is now Level {Char.Level}!")
@@ -571,10 +572,9 @@ def level_up():
                 print(f"[Max.DMG: +{NewMaxDmg}]")
                 if NewMaxSouls > 0:
                     print(f"[Max Souls: +{NewMaxSouls}]")
-                
-        GoOn = input("Press 'Enter' to continue... ")
 
-    choose_encounter()
+        GoOn = input("Press 'Enter' to continue... ")
+        return
 
 def battle():
     check = Player.Char.Level
@@ -601,11 +601,8 @@ def battle():
         Amount = 1
 
     create_monster(Tier, Amount)
-
-    CoinFlip = random.randint(0,1)
-
-    if CoinFlip == 0: player_turn()
-    else: monster_turn()
+    
+    player_turn()
 
 def player_turn():
     print("\nYou stumbled upon some monsters. It's time for battle!")
@@ -615,33 +612,42 @@ def player_turn():
         print(f"""\n{count}. {Element.Name}
               HP: {Element.HP} / {Element.FullHP}""")
     Choice = input("\nWould you like to [a]ttack, [u]se an item, use an a[b]ility or [r]etreat? ")
-    while Choice != "a" or Choice != "u" or Choice != "b" or Choice != "r":
+    while Choice != "a" and Choice != "u" and Choice != "b" and Choice != "r":
         Choice = input("\n[a]ttack, [u]se an item, use an a[b]ility or [r]etreat? ")
 
-    # Переписать матч в if-else
     match Choice:
         case "a":
             if len(Monsters) > 1:
                 Choice = input("\nWhich enemy would you like to attack? ")
                 while int(Choice) not in range(1, len(Monsters)):
                     Choice = input("\nPlease, enter a valid number... ")
-                Dmg = calculate_dmg(Player.Char, Monsters[Choice-1])
-                Monsters[Choice-1].HP -= Dmg
-                print(f"\n{Player.Char.Name} attacks {Monsters[Choice-1]} for {Dmg} dmg")
-                if Monsters[Choice-1].HP <= 0:
-                    victory()
+                Dmg = calculate_dmg(Player.Char, Monsters[int(Choice-1)])
+                Monsters[int(Choice-1)].HP -= Dmg
+                print(f"\n{Player.Char.Name} attacks {Monsters[int(Choice-1)]} for {Dmg} dmg")
+                if Monsters[int(Choice-1)].HP <= 0:
+                    Player.Char.Exp += Monsters[int(Choice-1)].Exp
+                    print(f"{Monsters[int(Choice-1)]} has perished. [+{[Monsters.Choice-1].Exp} exp]")
+                    CheckExp = level_up()
+                    Monsters.remove(Monsters[int(Choice-1)])
+                    if len(Monsters) == 0:
+                        victory()
+                    else:
+                        monster_turn()
                 else:
-                    print(f"\n{Monsters[Choice-1]} is now at {Monsters[Choice-1].HP} HP")
+                    print(f"\n{Monsters[int(Choice-1)]} is now at {Monsters[int(Choice-1)].HP} HP")
                     time.sleep(3)
                     monster_turn()
             else:
                 Dmg = calculate_dmg(Player.Char, Monsters[0])
                 Monsters[0].HP -= Dmg
-                print(f"\n{Player.Char.Name} attacks {Monsters[Choice-1]} for {Dmg} dmg")
+                print(f"\n{Player.Char.Name} attacks {Monsters[0]} for {Dmg} dmg")
                 if Monsters[0].HP <= 0:
+                    Player.Char.Exp += Monsters[0].Exp
+                    print(f"{Monsters[0]} has perished. [+{Monsters[0].Exp} exp]")
+                    CheckExp = level_up()
                     victory()
                 else:
-                    print(f"\n{Monsters[Choice-1]} is now at {Monsters[Choice-1].HP} HP")
+                    print(f"\n{Monsters[0]} is now at {Monsters[0].HP} HP")
                     time.sleep(3)
                     monster_turn()
         case "u":
@@ -705,6 +711,8 @@ def calculate_dmg(Attacker, Defender):
         InitialDmg = random.randint(Attacker.MinDmg, Attacker.MaxDmg) + int(Attacker.Int * 0.1)
 
     Dmg = InitialDmg - int(Defender.Prot * 0.3)
+    if Dmg <= 0:
+        Dmg = 1
     
     return Dmg
 
