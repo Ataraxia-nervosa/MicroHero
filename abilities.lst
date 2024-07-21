@@ -1,0 +1,10 @@
+Angry Shout;active;Your next attack deals 2x damage. Cooldown: 2 turns.;2;0;turn;barbarian;battle;attack
+Bloodlust (passive);passive;Defeating an enemy temporarily raises your damage by 30% of your STR.;2;0;turn;barbarian;battle;turn
+Deadly Spark;active;You ignite a magical flame that damages an enemy for 2x your INT. Cooldown: 2 turns.;2;0;turn;wizard;battle;attack
+Dangerous Cunning (passive);passive,When you defeat an enemy; your INT temporarily raises by 25%.;2;0;turn;wizard;battle;turn
+Brace for Impact;active;For 3 turns raises your Prot by 80% of your STR. Cooldown: 2 battle encounters.;2;0;encounter;warrior;battle;turn
+Footwork (passive);passive;You have the ability to sometimes evade damage altogether. The chance of this happening gets higher with more STR.;1;0;turn;warrior;battle;attack
+Mending;active;Heal yourself for the amount equal to twice your FAI. Cooldown: 1 battle encounter.;1;0;encounter;cleric;all;attack
+In My Hour of Need (passive);passive;Being near death doubles your FAI.;1;0;encounter;cleric;all;attack
+Rise and Fight;active;Summons a skeleton to fight for you. Expends a soul charge.;1;0;encounter;necromancer;all;attack
+Not Yet (passive);If you have a soul charge available at the moment of your death; you rise up once again to face new challenges. Cooldown: 5 battle encounters.;5;0;encounter;necromancer;all;attack
