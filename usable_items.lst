@@ -1,0 +1,9 @@
+Potion of Healing;potion;15;heal;Restores 15 HP;25;0;0;hp;instant
+Potion of Healing +1;potion;30;heal;Restores 30 HP;45;0;0;hp;instant
+Potion of Healing +2;potion;60;heal;Restores 60 HP;80;0;0;hp;instant
+Potion of Healing +3;potion;120;heal;Restores 120 HP;150;0;0;hp;instant
+Potion of the Gladiator;potion;5;buff;Raises your DMG by 5 for 3 turns;40;0;3;dmg;turn
+Potion of the Ox;potion;5;buff;Raises your STR by 5 for 3 turns;40;0;3;str;turn
+Potion of the Sage;potion;5;buff;Raises your INT by 5 for 3 turns;40;0;3;int;turn
+Potion of the Devout;potion;5;buff;Raises your FAI by 5 for 3 turns;40;0;3;fai;turn
+Potion of the Unyielding;potion;5;buff;Rasises your Prot by 5 for 3 turns;40;0;3;prot;turn

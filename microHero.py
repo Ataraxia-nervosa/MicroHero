@@ -22,6 +22,8 @@ Monsters = []
 Encounters = []
 Monsters = []
 Abilities = []
+Items = []
+UsableItems = []
 
 Player = None
 
@@ -33,7 +35,7 @@ class User:
         return self.Name
 
 class Character:
-    def __init__(self, Name, HP, MaxHP, Vocation, Str, Int, Fai, MinDmg, MaxDmg, Prot, InventorySize=0, InventoryMaxSize=10, Exp=0, ToLevel=100, Gold=50, Level=1, Abilities = None):
+    def __init__(self, Name, HP, MaxHP, Vocation, Str, Int, Fai, MinDmg, MaxDmg, Prot, InventorySize=0, InventoryMaxSize=10, Exp=0, ToLevel=100, Gold=50, Level=1):
         self.Name = Name
         self.HP = HP
         self.MaxHP = MaxHP
@@ -44,7 +46,7 @@ class Character:
         self.MinDmg = MinDmg
         self.MaxDmg = MaxDmg
         self.Prot = Prot
-        self.Inventory = None
+        self.Inventory = []
         self.InventorySize = InventorySize
         self.InventoryMaxSize = InventoryMaxSize
         self.Exp = Exp
@@ -53,6 +55,9 @@ class Character:
         self.Level = Level
         self.Abilities = Abilities
         self.NearDeath = False
+        self.PotionEffects = []
+        self.Abilities = []
+        self.Allies = []
 
     def __repr__(self):
         return f"""{self.Name} / The {self.Vocation}
@@ -168,6 +173,22 @@ class Ability:
     def __repr__(self):
         return f"{self.Name}"
     
+class UsableItem:
+    def __init__(self, Name, Form, Modifier, Location, Description, Price, EffectCooldown, MaxCooldown, Stat, Scope):
+        self.Name = Name
+        self.Form = Form
+        self.Modifier = Modifier
+        self.Location = Location
+        self.Description = Description
+        self.Price = Price
+        self.Cooldown = EffectCooldown
+        self.MaxCooldown = MaxCooldown
+        self.Stat = Stat
+        self.Scope = Scope
+
+    def __repr__(self):
+        return self.Name
+    
 def unpack_lists():
     global Names
     global Nicknames
@@ -236,6 +257,14 @@ def unpack_lists():
             TempLst2 = Element.split(";")
             TempAbility = Ability(TempLst2[0], TempLst2[1], TempLst2[2], int(TempLst2[3]), int(TempLst2[4]), TempLst2[5], TempLst2[6], TempLst2[7], TempLst2[8])
             Abilities.append(TempAbility)
+
+    with open("usable_items.lst") as UsableLst:
+        Text = UsableLst.read()
+        TempLst = Text.split("\n")
+        for Element in TempLst:
+            TempLst2 = Element.split(";")
+            TempItem = UsableItem(TempLst2[0], TempLst2[1], int(TempLst2[2]), TempLst2[3], TempLst2[4], int(TempLst2[5]), int(TempLst2[6]), int(TempLst2[7]), TempLst2[8], TempLst2[9])
+            UsableItems.append(TempItem)
 
 def create_player(Name):
     global Player
@@ -316,12 +345,17 @@ def create_character():
     
     Char = Character(CharName, CharHP, CharMaxHP, CharVoc, CharStr, CharInt, CharFai, CharMinDMG, CharMaxDMG, CharProt)
     Char.Abilities = CharAbilities
-    Char.Allies = []
     Char.Allies.append(Char)
     if Char.Vocation == "Necromancer":
         Char.Souls = 1
         Char.MaxSouls = 2
-    Char.Inventory = []
+    Char.Inventory.append(UsableItems[0])
+    Char.Inventory.append(UsableItems[4])
+    Char.Inventory.append(UsableItems[5])
+    Char.Inventory.append(UsableItems[6])
+    Char.Inventory.append(UsableItems[7])
+    Char.Inventory.append(UsableItems[8])
+    Char.InventorySize += 6
     Player.Char = Char
 
 def welcome():
@@ -585,9 +619,9 @@ def level_up():
                 NewProt = random.randint(3,7)
                 Char.MaxHP += NewHP
                 Char.HP = Char.MaxHP
-                Char.Str += 2
-                Char.Fai += 1
-                Char.Prot += 5
+                Char.Str += NewStr
+                Char.Fai += NewFai
+                Char.Prot += NewProt
                 print(f"\n[HP: +{NewHP}]")
                 print(f"[STR: +{NewStr}]")                
                 if NewFai > 0:
@@ -603,12 +637,12 @@ def level_up():
                 Char.HP = Char.MaxHP
                 if Char.NearDeath:
                     Char.NearDeath == False
-                    Char.Fai = Char.Fai / 2
+                    Player.Char.Fai -= Player.Char.Abilities[1].Amount
                     print("In My Hour of Need has expired.")
                     time.sleep(2)
-                Char.Fai += 3
-                Char.MinDmg += 2
-                Char.MaxDmg += 2                
+                Char.Fai += NewFai
+                Char.MinDmg += NewMinDmg
+                Char.MaxDmg += NewMaxDmg        
                 print(f"\n[HP: +{NewHP}]")
                 print(f"[FAI: +{NewFai}]")
                 print(f"Min.DMG: +{NewMinDmg}")
@@ -622,10 +656,10 @@ def level_up():
                 NewMaxSouls = random.randint(0,1)
                 Char.MaxHP += NewHP
                 Char.HP = Char.MaxHP
-                Char.Int += 2
-                Char.MinDmg += 2
-                Char.MaxDmg += 4
-                Char.MaxSouls += 1
+                Char.Int += NewInt
+                Char.MinDmg += NewMinDmg
+                Char.MaxDmg += NewMaxDmg
+                Char.MaxSouls += NewMaxSouls
                 print(f"\n[HP: +{NewHP}]")
                 print(f"[INT: +{NewInt}]")
                 print(f"[Min.DMG: +{NewMinDmg}]")
@@ -693,31 +727,33 @@ def player_turn():
         case "a":
             if len(Monsters) > 1:
                 Choice = input("\nWhich enemy would you like to attack? ")
+                Choice = int(Choice)
                 while int(Choice) not in range(1, len(Monsters)):
                     Choice = input("\nPlease, enter a valid number... ")
-                Dmg = calculate_dmg(Player.Char, Monsters[int(Choice-1)])
+                Dmg = calculate_dmg(Player.Char, Monsters[int(Choice)-1])
                 if AngryShout:
                     Dmg = Dmg * 2
                     AngryShout = False
-                Monsters[int(Choice-1)].HP -= Dmg
-                if Monsters[Choice-1].HP <= 0:
-                    Player.Char.Exp += Monsters[int(Choice-1)].Exp
-                    print(f"{Monsters[int(Choice-1)]} perished. [+{[Monsters.Choice-1].Exp} exp]")
+                Monsters[int(Choice)-1].HP -= Dmg
+                if Monsters[int(Choice)-1].HP <= 0:
+                    Player.Char.Exp += Monsters[Choice-1].Exp
+                    print(f"{Monsters[int(Choice)-1]} perished. [+{[Monsters.int(Choice)-1].Exp} exp]")
                     CheckExp = level_up()
-                    Monsters.remove(Monsters[int(Choice-1)])
+                    Monsters.remove(Monsters[int(Choice)-1])
                     if Player.Char.Vocation == "Necromancer" and Player.Char.Souls < Player.Char.MaxSouls:
                         Player.Char.Souls += 1
                         print("\nWorking your dark magics, you make your enemy's soul serve you.")
                         print(f"[Souls: {Player.Char.Souls}/{Player.Char.MaxSouls}]")
                     if Player.Char.Vocation == "Wizard":
-                        NewAmount = int(Player.Char.Int * 0.1)
-                        Player.Char.Int += NewAmount
-                        Player.Char.Abilities[1].Amount +=NewAmount
                         if len(Monsters) > 0:
-                            Player.Char.Abilities[1].AbCooldown = 3
-                        else:
-                            Player.Char.Abilities[1].AbCooldown = 2
-                        print(f"\nOutwitting your opponent, you get a boost of confidence. Your INT is temporarily raised by {NewAmount}. It is now at {Player.Char.Int}")
+                            NewAmount = int(Player.Char.Int * 0.1)
+                            Player.Char.Int += NewAmount
+                            Player.Char.Abilities[1].Amount +=NewAmount
+                            if len(Monsters) > 0:
+                                Player.Char.Abilities[1].AbCooldown = 3
+                            else:
+                                Player.Char.Abilities[1].AbCooldown = 2
+                            print(f"\nOutwitting your opponent, you get a boost of confidence. Your INT is temporarily raised by {NewAmount}. It is now at {Player.Char.Int}")
                     if Player.Char.Vocation == "BarBarian":
                         NewAmount = int(Player.Char.Str * 0.3)
                         Player.Char.MinDmg += NewAmount
@@ -731,10 +767,11 @@ def player_turn():
                     time.sleep(2)
                     if len(Monsters) == 0:
                         cooldown = cooldowns("encounter")
+                        cooldown = cooldowns("turn")
                         victory()
                     else:
                         monster_turn()
-                print(f"\n{Player.Char.Name} attacks {Monsters[int(Choice-1)]} for {Dmg} dmg")
+                print(f"\n{Player.Char.Name} attacks {Monsters[int(Choice)-1]} for {Dmg} dmg")
                 if len(Player.Char.Allies) > 0:
                     for Element in Player.Char.Allies:
                         if Element.Name == Player.Char.Name:
@@ -752,7 +789,7 @@ def player_turn():
                                 if Player.Char.Vocation == "Necromancer" and Player.Char.Souls < Player.Char.MaxSouls:
                                     Player.Char.Souls += 1
                                     print("\nWorking your dark magics, you make your enemy's souls serve you.")
-                                    print(f"[]Souls: {Player.Char.Souls}/{Player.Char.MaxSouls}]")
+                                    print(f"[Souls: {Player.Char.Souls}/{Player.Char.MaxSouls}]")
                                 if Player.Char.Vocation == "Wizard":
                                     NewAmount = int(Player.Char.Int * 0.1)
                                     Player.Char.Int += NewAmount
@@ -775,6 +812,7 @@ def player_turn():
                                 time.sleep(2)
                                 if len(Monsters) == 0:
                                     cooldown = cooldowns("encounter")
+                                    cooldown = cooldowns("turn")
                                     victory()
                                 else:
                                     monster_turn()
@@ -809,6 +847,7 @@ def player_turn():
                     time.sleep(2)
                     if len(Monsters) == 0:
                         cooldown = cooldowns("encounter")
+                        cooldown = cooldowns("turn")
                         victory()
                     else:
                         monster_turn()
@@ -847,6 +886,7 @@ def player_turn():
                         print(f"\nYour opponent falls. You feel blood rushing to your head. Everyone shall know your fury now! Your damage is temporarily raised by {NewAmount}. It is now {Player.Char.MinDmg}—{Player.Char.MaxDmg}")
                     time.sleep(2)
                     cooldown = cooldowns("encounter")
+                    cooldown = cooldowns("turn")
                     victory()
                 else:
                     print(f"\n{Monsters[0]} is now at {Monsters[0].HP} HP")
@@ -872,7 +912,7 @@ def player_turn():
                                 if Player.Char.Vocation == "Necromancer" and Player.Char.Souls < Player.Char.MaxSouls:
                                     Player.Char.Souls += 1
                                     print("\nWorking your dark magics, you make your enemy's souls serve you.")
-                                    print(f"[]Souls: {Player.Char.Souls}/{Player.Char.MaxSouls}]")
+                                    print(f"[Souls: {Player.Char.Souls}/{Player.Char.MaxSouls}]")
                                 if Player.Char.Vocation == "BarBarian":
                                     NewAmount = int(Player.Char.Str * 0.3)
                                     Player.Char.MinDmg += NewAmount
@@ -882,6 +922,7 @@ def player_turn():
                                     print(f"\nYour opponent falls. You feel blood rushing to your head. Everyone shall know your fury now! Your damage is temporarily raised by {NewAmount}. It is now {Player.Char.MinDmg}—{Player.Char.MaxDmg}")
                                 time.sleep(2)
                                 cooldown = cooldowns("encounter")
+                                cooldown = cooldowns("turn")
                                 victory()
                     monster_turn()
         case "u":
@@ -889,28 +930,35 @@ def player_turn():
                 print("\nYou don't have anything.")
                 time.sleep(3)
                 player_turn()
+
+            Usable = []
+
+            for Item in Player.Char.Inventory:
+                if Item.Location == "heal" or Item.Location == "buff":
+                    Usable.append(Item)
             
+            if len(Usable) == 0:
+                Back = input("You don't have any usable items in your inventory. Press 'Enter' to go back... ")
+                player_turn()
+
             print(f"\nINVENTORY")
             Num = 1
-            for Item in Player.Char.Inventory:
-                print(f"""\n{Num}. {Item.Name}
-{Item.Prefix.Name}: {Item.Prefix.Description}
-{Item.Core.Name}: {Item.Core.Description}
-{Item.Postfix.Name}: {Item.Postfix.Description}""")     
+            for Item in Usable:
+                print(f"\n{Num}. {Item.Name}: {Item.Description}")     
 
             Choice = input("Which item would you like to use? Enter '0' to go back... ") 
-            while Choice not in range (0, len(Player.Char.Inventory)):
+            while int(Choice) not in range (0, len(Usable)+1):
                 Choice = input("Please, pick a valid number or enter '0; to go back... ")
             if Choice == "0":
                 player_turn()
-            else:
-                if Player.Char.Inventory[int(Choice)-1].Location != "heal" or Player.Char.Inventory[int(Choice)-1].Location != "buff":
-                    back = input(f"{Player.Char.Inventory[int(Choice)-1]} is not usable. Press 'Enter' to go back... ")
-                    player_turn()
-                elif Player.Char.Inventory[int(Choice)-1].Location == "heal":
-                    use_heal(Player.Char.Inventory[int(Choice)-1], "battle")
-                elif Player.Char.Inventory[int(Choice)-1].Location == "buff":
-                    use_buff(Player.Char.Inventory[int(Choice)-1], "battle")
+            
+            if Usable[int(Choice)-1].Location == "heal":
+                Heal = use_heal(Usable[int(Choice)-1])
+                monster_turn()
+            elif Usable[int(Choice)-1].Location == "buff":
+                buff = use_buff(Usable[int(Choice)-1])
+                monster_turn()
+
         case "b":
             Usable = []
             for Element in Player.Char.Abilities:
@@ -958,6 +1006,7 @@ def player_turn():
                             Player.Char.Abilities[1].AbCooldown = 2
                         print(f"\nOutwitting your opponent, you get a boost of confidence. Your INT is temporarily raised by {NewAmount}. It is now at {Player.Char.Int}")
                         cooldown = cooldowns("encounter")
+                        cooldown = cooldowns("turn")
                         time.sleep(2)
                         victory()
                     else:
@@ -1005,6 +1054,7 @@ def monster_turn():
             time.sleep(2)
         if Player.Char.HP < int(Player.Char.MaxHP * 0.2) and Player.Char.Vocation == "Cleric" and Player.Char.NearDeath == False:
             Player.Char.NearDeath == True
+            Player.Char.Abilities[1].Amount += Player.Char.Fai
             Player.Char.Fai += Player.Char.Fai
             print(f"Sensing that death is near, you hold fast in your convictions. Your FAI has doubled. It is now at {Player.Char.Fai}")
         if AllyList[Target-1].Name == Player.Char.Name:
@@ -1018,37 +1068,66 @@ def cooldowns(Scope):
         if Element.CooldownType == Scope and Element.AbCooldown > 0:
             Element.AbCooldown -= 1
             if Element.AbCooldown == 0:
-                match Element.Name:
-                    case "Dangerous Cunning":
+                if Element.Name == "Dangerous Cunning":
                         Player.Char.Int -= Element.Amount
                         Element.Amount = 0
                         print("Dangerous Cunning has expired.")
                         time.sleep(2)
-                    case "Angry Shout":
+                if Element.Name == "Angry Shout":
                         print("Angry Shout is not on cooldown anymore.")
                         time.sleep(2)
-                    case "Bloodlust":
+                if Element.Name == "Bloodlust":
                         Player.Char.MinDmg -= Element.Amount
                         Player.Char.MaxDmg -= Element.Amount
                         Element.Amount = 0
                         print("Bloodlust has expired.")
                         time.sleep(2)
-                    case "Brace for Impact":
+                if Element.Name == "Brace for Impact":
                         print("Brace for Impact is not on cooldown anymore.")
                         time.sleep(2)
-                    case "Mending":
+                if Element.Name == "Mending":
                         print("Mending is not on cooldown anymore.")
-                    case "Deadly Spark":
+                if Element.Name == "Deadly Spark":
                         print("Deadly Spark is not on cooldown anymore.")
                         time.sleep(2)
         if Element.EffectCooldownType == Scope:
             Element.EffectCooldown -= 1
             if Element.EffectCooldown == 0:
-                match Element.Name:                    
-                    case "Brace for Impact":
-                        Player.Char.Prot -= Element.Amount
-                        Element.Amount = 0
-                        print("Brace For Impact has expired.")
+                if Element.Name == "Brace for Impact":
+                    Player.Char.Prot -= Element.Amount
+                    Element.Amount = 0
+                    print("Brace For Impact has expired.")
+    ElementsToRemove = []
+    for Element in Player.Char.PotionEffects:
+        if Element.Scope == Scope and Element.Cooldown > 0:
+            Element.Cooldown -= 1
+            print(f"Processing {Element.Name}: cooldown reduced to {Element.Cooldown}")
+            if Element.Cooldown == 0:
+                if Element.Stat == "dmg":
+                    Player.Char.MinDmg -= Element.Modifier
+                    Player.Char.MaxDmg -= Element.Modifier
+                    print(f"\n{Element.Name} has worn off.")
+                    time.sleep(2)
+                if Element.Stat == "str":
+                    Player.Char.Str -= Element.Modifier
+                    print(f"\n{Element.Name} has worn off.")
+                    time.sleep(2)
+                if Element.Stat == "int":
+                    Player.Char.Int -= Element.Modifier
+                    print(f"\n{Element.Name} has worn off.")
+                    time.sleep(2)
+                if Element.Stat == "fai":
+                    Player.Char.Fai -= Element.Modifier
+                    print(f"\n{Element.Name} has worn off.")
+                    time.sleep(2)
+                if Element.Stat == "prot":
+                    Player.Char.Prot -= Element.Modifier
+                    print(f"\n{Element.Name} has worn off.")
+                    time.sleep(2)
+                ElementsToRemove.append(Element)
+    for Element in ElementsToRemove:
+        if Element in Player.Char.PotionEffects:
+            Player.Char.PotionEffects.remove(Element)
 
 def use_ability(Ability):
     global AngryShout
@@ -1061,7 +1140,7 @@ def use_ability(Ability):
                 Ability.AbCooldown = 2
             if Player.Char.NearDeath:
                 Player.Char.NearDeath == False
-                Player.Char.Fai = Player.Char.Fai / 2
+                Player.Char.Fai -= Player.Char.Abilities[1].Amount
                 print("In My Hour of Need has expired.")
                 time.sleep(2)
             return
@@ -1193,10 +1272,16 @@ def open_inventory():
     print(f"\nINVENTORY")
     Num = 1
     for Item in Player.Char.Inventory:
-        print(f"""\n{Num}. {Item.Name}
-{Item.Prefix.Name}: {Item.Prefix.Description}
-{Item.Core.Name}: {Item.Core.Description}
-{Item.Postfix.Name}: {Item.Postfix.Description}""")
+        if Item.Location == "heal" or Item.Location == "buff":
+            
+            print(f"\n{Num}. {Item.Name}")
+            if not hasattr(Item, "Prefix"):
+                print(f"{Item.Description} ")
+            else:
+                print(f"{Item.Prefix.Name}: {Item.Prefix.Description}")
+                print(f"{Item.Core.Name}: {Item.Core.Description}")
+                print(f"{Item.Postfix.Name}: {Item.Postfix.Description}")
+            Num += 1
     
     choice = input("Would you like to [d]iscard an item, [u]se one or go [b]ack? ")
     while choice != "d" and choice != "u" and choice != "b":
@@ -1215,15 +1300,13 @@ def open_inventory():
                     open_inventory()
                 else:
                     x = int(choice)
-                    if Player.Char.Inventory[x-1].Location != "heal" or Player.Char.Inventory[x-1].Location != "buff":
-                        choice = input(f"\nThe {Player.Char.Inventory[x-1].Location} is not usable in this way. Press 'Enter' to go back... ")
+                    if Player.Char.Inventory[x-1].Location != "heal" and Player.Char.Inventory[x-1].Location != "buff":
+                        choice = input(f"\nThe {Player.Char.Inventory[x-1].Name} is not usable in this way. Press 'Enter' to go back... ")
                         open_inventory()
                     elif Player.Char.Inventory[x-1].Location == "heal":
-                        use_heal(Player.Char.Inventory[x-1], "peace")
-                        Player.Char.Inventory.remove(Player.Char.Inventory[x-1])
+                        Heal = use_heal(Player.Char.Inventory[x-1])
                     elif Player.Char.Inventory[x-1].Location == "buff":
-                        use_buff(Player.Char.Inventory[x-1], "peace")
-                        Player.Char.Inventory.remove(Player.Char.Inventory[x-1])
+                        Buff = use_buff(Player.Char.Inventory[x-1])
                     open_inventory()
         case "d":
             if Player.Char.InventorySize == 0:
@@ -1275,11 +1358,61 @@ def choose_ability(Status):
         else:
             return
 
-def use_heal(item, status):
-    pass
+def use_heal(Item):
+    Player.Char.HP += Item.Modifier
+    if Player.Char.HP > Player.Char.MaxHP:
+        Player.Char.HP = Player.Char.MaxHP
+    if Player.Char.Vocation == "Cleric" and Player.Char.NearDeath:
+        Player.Char.NearDeath = False
+        Player.Char.Fai -= Player.Char.Abilities[1].Amount
+    Player.Char.Inventory.remove(Item)
+    Player.Char.InventorySize -= 1
+    Healed = input(f"{Player.Char.Name} healed for {Item.Modifier} HP. They are now at {Player.Char.HP} HP. Press 'Enter' to go back... ")
+    return
 
-def use_buff(item, status):
-    pass
+def use_buff(Item):
+    match Item.Stat:
+        case "dmg":
+            Player.Char.MinDmg += Item.Modifier
+            Player.Char.MaxDmg += Item.Modifier
+            Item.Cooldown = Item.MaxCooldown
+            Player.Char.PotionEffects.append(Item)
+            Player.Char.Inventory.remove(Item)
+            Player.Char.InventorySize -= 1
+            print(f"{Player.Char.Name} consumes the {Item.Name}")
+            return
+        case "str":
+            Player.Char.Str += Item.Modifier
+            Item.Cooldown = Item.MaxCooldown
+            Player.Char.PotionEffects.append(Item)
+            Player.Char.Inventory.remove(Item)
+            Player.Char.InventorySize -= 1
+            print(f"{Player.Char.Name} consumes the {Item.Name}")
+            return
+        case "int":
+            Player.Char.Int += Item.Modifier
+            Item.Cooldown = Item.MaxCooldown
+            Player.Char.PotionEffects.append(Item)
+            Player.Char.Inventory.remove(Item)
+            Player.Char.InventorySize -= 1
+            print(f"{Player.Char.Name} consumes the {Item.Name}")
+            return
+        case "fai":
+            Player.Char.Fai += Item.Modifier
+            Item.Cooldown = Item.MaxCooldown
+            Player.Char.PotionEffects.append(Item)
+            Player.Char.Inventory.remove(Item)
+            Player.Char.InventorySize -= 1
+            print(f"{Player.Char.Name} consumes the {Item.Name}")
+            return
+        case "prot":
+            Player.Char.Prot += Item.Modifier
+            Item.Cooldown = Item.MaxCooldown
+            Player.Char.PotionEffects.append(Item)
+            Player.Char.Inventory.remove(Item)
+            Player.Char.InventorySize -= 1
+            print(f"{Player.Char.Name} consumes the {Item.Name}")
+            return
 
 def create_monster(Tier=1, Amount=1):
     Count = 1
