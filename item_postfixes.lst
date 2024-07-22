@@ -1,1 +1,14 @@
- of the Bat,lifesteal,50,1,Lifesteal 50% of damage dealt,20; of Rebirth,hp_recurrent,5,1,Restores 5 HP each turn,15; of the Gladiator,p_dmg,5,1,+5 Physical damage,10; of the Soothsayer,m_dmg,5,1,+5 Magical damage,10; of the Cantor,h_dmg,5,1,+5 Holy damage,10; of the Armiger,p_dmg,10,2,+10 Physical damage,15; of the Warlock,m_dmg,10,2,+10 Magical damage,15; of the Ecclesiastic,h_dmg,10,2,+10 Holy damage,15; of the Warlord,p_dmg,15,3,+15 Physical damage,20; of the Magus,m_dmg,15,3,+15 Magical damage,20; of the Divine,h_dmg,15,3,+15 Holy damage,20; of Nourishment,full_hp,20,1,Maximum HP +20,40; of Invigoration,full_hp,40,2,Maximum HP +40,60; of Perpetuation,full_hp,60,3,Maximum HP +60,80
+ of the Bat,lifesteal,50,1,Lifesteal 50% of damage dealt,20
+ of Rebirth,hp_recurrent,5,1,Restores 5 HP each turn,15
+ of the Gladiator,p_dmg,5,1,+5 Physical damage,10
+ of the Soothsayer,m_dmg,5,1,+5 Magical damage,10
+ of the Cantor,h_dmg,5,1,+5 Holy damage,10
+ of the Armiger,p_dmg,10,2,+10 Physical damage,15
+ of the Warlock,m_dmg,10,2,+10 Magical damage,15
+ of the Ecclesiastic,h_dmg,10,2,+10 Holy damage,15
+ of the Warlord,p_dmg,15,3,+15 Physical damage,20
+ of the Magus,m_dmg,15,3,+15 Magical damage,20
+ of the Divine,h_dmg,15,3,+15 Holy damage,20
+ of Nourishment,full_hp,20,1,Maximum HP +20,40
+ of Invigoration,full_hp,40,2,Maximum HP +40,60
+ of Perpetuation,full_hp,60,3,Maximum HP +60,80

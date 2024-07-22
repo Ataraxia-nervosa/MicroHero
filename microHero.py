@@ -16,7 +16,6 @@ Vocations = ["Barbarian", "Wizard", "Warrior", "Cleric", "Necromancer"]
 
 Prefixes = []
 Cores = []
-Postfixes = []
 EnemyMolds = []
 Monsters = []
 Encounters = []
@@ -58,6 +57,7 @@ class Character:
         self.PotionEffects = []
         self.Abilities = []
         self.Allies = []
+        self.ItemEffects = []
 
     def __repr__(self):
         return f"""{self.Name} / The {self.Vocation}
@@ -107,24 +107,22 @@ class Ally:
         return self.Name
     
 class Item:
-    def __init__(self, Prefix, Core, Postfix):
+    def __init__(self, Prefix, Core):
         self.Prefix = Prefix
         self.Core = Core
-        self.Postfix = Postfix
-        self.Name = self.Prefix.Name + self.Core.Name + self.Postfix.Name
-        self.Price = self.Prefix.Price + self.Core.Price + self.Postfix.Price
+        self.Name = self.Prefix.Name + self.Core.Name
+        self.Price = self.Prefix.Price + self.Core.Price
         self.Location = self.Core.Location
 
     def __repr__(self):
         return f"{self.Name}"
     
 class Prefix:
-    def __init__(self, Name, Effect, Modifier, Tier, PosNeg, Description, Price):
+    def __init__(self, Name, Stat, Modifier, Tier, Description, Price):
         self.Name = Name
-        self.Effect = Effect
+        self.Stat = Stat
         self.Modifier = Modifier
         self.Tier = Tier
-        self.PosNeg = PosNeg
         self.Description = Description
         self.Price = Price
     
@@ -132,27 +130,17 @@ class Prefix:
         return f"{self.Name}"
 
 class Core:
-    def __init__(self, Name, Effect, Modifier, Location, Element, Description, Price, Tier):
+    def __init__(self, Name, Stat, Modifier, Location, Description, Price, Tier):
         self.Name = Name
-        self.Effect = Effect
+        self.Stat = Stat
         self.Modifier = Modifier
         self.Location = Location
-        self.Element = Element
         self.Description = Description
         self.Price = Price
         self.Tier = Tier
 
     def __repr__(self):
         return f"{self.Name}"
-
-class Postfix:
-    def __init__(self, Name, Effect, Modifier, Tier, Description, Price):
-        self.Name = Name
-        self.Effect = Effect
-        self.Modifier = Modifier
-        self.Tier = Tier
-        self.Description = Description
-        self.Price = Price
 
     def __repr__(self):
         return f"{self.Name}"
@@ -194,7 +182,6 @@ def unpack_lists():
     global Nicknames
     global Prefixes
     global Cores
-    global Postfixes
     global EnemyMolds
     global Encounters
     global Abilities
@@ -209,10 +196,10 @@ def unpack_lists():
 
     with open("item_prefixes.lst") as PrefixesLst:
         Text = PrefixesLst.read()
-        TempLst = Text.split(";")
+        TempLst = Text.split("\n")
         for Element in TempLst:
             Stat = Element.split(",")
-            TempPrefix = Prefix(Stat[0], Stat[1], int(Stat[2]), int(Stat[3]), Stat[4], Stat[5], int(Stat[6]))
+            TempPrefix = Prefix(Stat[0], Stat[1], int(Stat[2]), int(Stat[3]), Stat[4], int(Stat[5]))
             Prefixes.append(TempPrefix)
         print(Prefixes)
 
@@ -221,18 +208,18 @@ def unpack_lists():
         TempLst = Text.split("\n")
         for Element in TempLst:
             Stat = Element.split(",")
-            TempCore = Core(Stat[0], Stat[1], Stat[2], Stat[3], Stat[4], Stat[5], int(Stat[6]), int(Stat[7]))
+            TempCore = Core(Stat[0], Stat[1], int(Stat[2]), Stat[3], Stat[4], int(Stat[5]), int(Stat[6]))
             Cores.append(TempCore)
         print(Cores)
 
-    with open("item_postfixes.lst") as PostfixesLst:
-        Text = PostfixesLst.read()
-        TempLst = Text.split(";")
-        for Element in TempLst:
-            Stat = Element.split(",")
-            TempPostfix = Postfix(Stat[0], Stat[1], int(Stat[2]), int(Stat[3]), Stat[4], int(Stat[5]))
-            Postfixes.append(TempPostfix)
-        print(Postfixes)
+    # with open("item_postfixes.lst") as PostfixesLst:
+    #     Text = PostfixesLst.read()
+    #     TempLst = Text.split("\n")
+    #     for Element in TempLst:
+    #         Stat = Element.split(",")
+    #         TempPostfix = Postfix(Stat[0], Stat[1], int(Stat[2]), int(Stat[3]), Stat[4], int(Stat[5]))
+    #         Postfixes.append(TempPostfix)
+    #     print(Postfixes)
 
     with open("enemies.lst") as EnemyMoldsLst:
         Text = EnemyMoldsLst.read()
@@ -412,7 +399,7 @@ def choose_encounter():
     global PositiveEncounters
 
     EncounterCounter += 1
-    if (random.randint(1,100) - Player.Char.Fai) <= 30:
+    if (random.randint(1,100) - Player.Char.Fai) <= 25:
         PositiveEncounters += 1
         encounter()
     else:
@@ -446,13 +433,13 @@ def encounter():
             print(f"\n[+{Gold} gold]")
         case "item", "small":
             FoundItem = find_item("small")
-            Grab = CheckForSpace(FoundItem)
+            Grab = CheckForSpace(FoundItem, "found")
         case "item", "mid":
             FoundItem = find_item("mid")
-            Grab = CheckForSpace(FoundItem)
+            Grab = CheckForSpace(FoundItem, "found")
         case "item", "large":
             FoundItem = find_item("large")
-            Grab = CheckForSpace(FoundItem)
+            Grab = CheckForSpace(FoundItem, "found")
         case "exp", "small":
             ExpGain = int(25 + Player.Char.ToLevel * 0.2)
             Player.Char.Exp += ExpGain
@@ -468,8 +455,124 @@ def encounter():
             Player.Char.Exp += ExpGain
             print(f"[+ {ExpGain}] exp")
             CheckExp = level_up()
+        case "shop", "small":
+            Stock = stock_the_shop("small")
+            Shop = open_shop(Stock)
+        case "shop", "mid":
+            Stock = stock_the_shop("mid")
+            Shop = open_shop(Stock)
+        case "shop", "large":
+            Stock = stock_the_shop("large")
+            Shop = open_shop(Stock)
 
     GoOn = input("\nPress 'Enter' to continue... ")
+
+def stock_the_shop(Size):
+    Count = 0
+    Shop = []
+    if Size == "small":
+        while Count < 3:
+            NewItem = create_item()
+            Shop.append(NewItem)
+            Count +=1
+        Count = 0
+        while Count < 2:
+            NewItem = random.randint(0, len(UsableItems)-1)
+            Shop.append(UsableItems[NewItem])
+            Count += 1
+    if Size == "mid":
+        while Count < 5:
+            NewItem = create_item()
+            Shop.append(NewItem)
+            Count +=1
+        Count = 0
+        while Count < 3:
+            NewItem = random.randint(0, len(UsableItems)-1)
+            Shop.append(UsableItems[NewItem])
+            Count += 1
+    if Size == "large":
+        while Count < 10:
+            NewItem = create_item()
+            Shop.append(NewItem)
+            Count +=1
+        Count = 0
+        while Count < 5:
+            NewItem = random.randint(0, len(UsableItems)-1)
+            Shop.append(UsableItems[NewItem])
+            Count += 1
+
+    Trade = open_shop(Shop)        
+
+def open_shop(Stock):
+    global GoldAcquired
+    Choice = input("Hi there! Are you [b]uying or [s]elling? Enter '0' to leave... ")
+    while Choice not in ("b", "s", "0"):
+        Choice = input("Please, choose either [b]uy, [s]ell or '0' to leave... ")
+    if Choice == "0":
+        return
+    elif Choice == "b":
+        Num = 1
+        print("\nHere's today's stock.")
+        for Element in Stock:
+            print(f"\n{Num}. {Element.Name}")
+            if hasattr(Element, "Prefix"):
+                print(f"{Element.Prefix.Name}: {Element.Prefix.Description}")
+                print(f"{Element.Core.Name}: {Element.Core.Description}")
+                Element.Price = Element.Prefix.Price + Element.Core.Price
+                print(f"Price: {Element.Price} gold")
+            else:
+                print(f"{Element.Description}")
+                print(f"Price: {Element.Price}")
+            Num += 1
+        Choice = input(f"\nYou have {Player.Char.Gold} gold. What would you like to buy? Enter '0' to go back... ")
+        while not Choice.isdigit() and int(Choice) not in range(0, len(Stock)+1):
+            Choice = input("\nPlease, enter a valid number or '0' to go back... ")
+        Choice = int(Choice)
+        if Choice == 0:
+            open_shop(Stock)
+        else:
+            if Stock[Choice-1].Price > Player.Char.Gold:
+                print("You do not have enough money.")
+                time.sleep(2)
+                open_shop()
+            Player.Char.Gold -= Stock[Choice-1].Price
+            Space = CheckForSpace(Stock[Choice-1], "bought")
+            Stock.remove(Stock[Choice-1])
+            open_shop(Stock)
+    elif Choice == "s":
+        if Player.Char.InventorySize > 0:
+            print("\nHere are your items.")
+            Num = 1
+            for Element in Player.Char.Inventory:
+                print(f"\n{Num}. {Element.Name}")
+                if hasattr(Element, "Prefix"):
+                    print(f"{Element.Prefix.Name}: {Element.Prefix.Description}")
+                    print(f"{Element.Core.Name}: {Element.Core.Description}")
+                    print("Price: " + str(Element.Prefix.Price + Element.Core.Price))
+                else:
+                    print(f"{Element.Description}")
+                    print(f"Price: {Element.Price}")
+                Num += 1
+            Choice = input("What would you like to sell? Enter '0' to go back... ")
+            while not Choice.isdigit() and int(Choice) not in range(0,len(Player.Char.Inventory) + 1):
+                Choice = input("Please, enter a valid number or '0' to go back... ")
+            Choice = int(Choice)
+            if Choice == 0:
+                open_shop(Stock)
+            else:
+                if hasattr(Player.Char.Inventory[Choice-1], "Prefix"):
+                    Price = Player.Char.Inventory[Choice-1].Prefix.Price + Player.Char.Inventory[Choice-1].Core.Price
+                else:
+                    Price = Player.Char.Inventory[Choice-1].Price
+                ToSell = Player.Char.Inventory[Choice-1]
+                Player.Char.Gold += Price
+                GoldAcquired += Price
+                print(f"[-{ToSell.Name}]")
+                print(f"[+{Price}]")
+                MinusBuff = remove_item_buff(ToSell)
+                Player.Char.Inventory.remove(ToSell)                
+                time.sleep(2)
+                open_shop(Stock)
 
 def find_item(amount):
     global ItemsFound
@@ -485,15 +588,14 @@ def find_item(amount):
 
     PrefixFound = False
     CoreFound = False
-    PostfixFound = False
+#    PostfixFound = False
     TempPrefix = None
     TempCore = None
-    TempPostfix = None
 
-    while not (PrefixFound and CoreFound and PostfixFound):
+    while not (PrefixFound and CoreFound):
         TempPrefixes = []
         TempCores = []
-        TempPostfixes = []
+#        TempPostfixes = []
 
         if not PrefixFound:
             print("\nPrefix stage...")
@@ -517,60 +619,148 @@ def find_item(amount):
                 CoreFound = True
                 print(f"Core {TempCore} found.")
                 break
-        if not PostfixFound:
-            print("\nPostfix stage...")
-            for Element in Postfixes:
-                if Element.Tier <= Tier:
-                    TempPostfixes.append(Element)
-                PostfixNum = random.randint(0, len(TempPostfixes)-1)
-                print("Looking for postfix.")
-                TempPostfix = TempPostfixes[PostfixNum]
-                PostfixFound = True
-                break
+        # if not PostfixFound:
+        #     print("\nPostfix stage...")
+        #     for Element in Postfixes:
+        #         if Element.Tier <= Tier:
+        #             TempPostfixes.append(Element)
+        #         PostfixNum = random.randint(0, len(TempPostfixes)-1)
+        #         print("Looking for postfix.")
+        #         TempPostfix = TempPostfixes[PostfixNum]
+        #         PostfixFound = True
+        #         break
 
-    Reward = create_item(TempPrefix, TempCore, TempPostfix)
+    Reward = create_item(TempPrefix, TempCore)
     print(f"Item '{Reward}' created.")
     return Reward
 
-def CheckForSpace(FoundItem):
+def CheckForSpace(FoundItem, Status):
     global ItemsKept
-
-    if Player.Char.InventorySize < Player.Char.InventoryMaxSize:
-        print(f"\n[{FoundItem} found!]")
-        print(f"{FoundItem.Prefix.Name}: {FoundItem.Prefix.Description}")
-        print(f"{FoundItem.Core.Name}: {FoundItem.Core.Description}")
-        print(f"{FoundItem.Postfix.Name}: {FoundItem.Postfix.Description}")
-        keep = input("\nWould you like to keep it? [y/n]")
-        while keep != "y" and keep != "n":
-            keep = input("Please, answer either 'y' or 'n'... ")
-        if keep == "y":
-            ItemsKept += 1
-            Player.Char.Inventory.append(FoundItem)
-            print(f"\n[+ {FoundItem}]")
-            input("Press 'Enter' to continue... ")
-        if keep == "n":
-            print(f"\nYou decide to leave the {FoundItem} alone, and continue on your way.")
-            del FoundItem
-            input("\nPress 'Enter' to continue... ")
-    else:
-        print("\nThere is no room in your inventory. Would you like to discard something?")
-        count = 1
-        for Item in Player.Char.Inventory:
-            print(f"\n{count}. {Item.Name}")
-            print(f"{Item.Prefix.Name}: {Item.Prefix.Description}")
-            print(f"{Item.Core.Name} {Item.Core.Description}")
-            print(f"{Item.Postfix.Name} {Item.Postfix.Description}")
+    if Status == "found":
+        if Player.Char.InventorySize < Player.Char.InventoryMaxSize:
+            print(f"\n[{FoundItem} found!]")
+            if hasattr(FoundItem, "Prefix"):
+                print(f"{FoundItem.Prefix.Name}: {FoundItem.Prefix.Description}")
+                print(f"{FoundItem.Core.Name}: {FoundItem.Core.Description}")
+            else:
+                print(f"{FoundItem.Description}")
+            keep = input("\nWould you like to keep it? [y/n]")
+            while keep != "y" and keep != "n":
+                keep = input("Please, answer either 'y' or 'n'... ")
+            if keep == "y":
+                ItemsKept += 1
+                Player.Char.Inventory.append(FoundItem)
+                Player.Char.ItemEffects.append(FoundItem)
+                Buff = apply_item_buff(FoundItem)
+                Player.Char.InventorySize += 1
+                print(f"\n[+ {FoundItem}]")
+                input("Press 'Enter' to continue... ")
+            if keep == "n":
+                print(f"\nYou decide to leave the {FoundItem} alone, and continue on your way.")
+                del FoundItem
+                input("\nPress 'Enter' to continue... ")
+        else:
+            print("\nThere is no room in your inventory. Would you like to discard something?")
+            count = 1
+            for Item in Player.Char.Inventory:
+                print(f"\n{count}. {Item.Name}")
+                print(f"{Item.Prefix.Name}: {Item.Prefix.Description}")
+                print(f"{Item.Core.Name} {Item.Core.Description}")
             Discard = input(f"\nChoose a number or enter '0' to leave the {FoundItem.Name} where it is and move on... ")
-            while Discard not in range(1, Player.Char.InventorySize+1):
+            while not Discard.isdigit() and Discard not in range(0, len(Player.Char.Inventory)+1):
                 Discard = input(f"\nPlease, choose a valid number or enter '0' to leave the {FoundItem.Name} where it is and move on... ")
             if Discard == "0":
                 print(f"\nYou decide that you don't need the {FoundItem.Name}, and continue your journey.")
                 GoOn = input("Press 'Enter' to continue... ")
             else:
+                Discard = int(Discard)
+                MinusBuff = remove_item_buff(Player.Char.Inventory[Discard-1])
+                Player.Char.Inventory.remove(Player.Char.Inventory[Discard-1])
                 ItemsKept += 1
                 Player.Char.Inventory.append(FoundItem)
+                PlusBuff = apply_item_buff(FoundItem)
                 print(f"\n[+ {FoundItem.Name}]")
-                GoOn = input("Press 'Enter' to continue... ")    
+                time.sleep(2)
+    elif Status == "bought":
+        if Player.Char.InventorySize < Player.Char.InventoryMaxSize:
+            ItemsKept += 1
+            Player.Char.Inventory.append(FoundItem)
+            Player.Char.ItemEffects.append(FoundItem)
+            Buff = apply_item_buff(FoundItem)
+            Player.Char.InventorySize += 1
+            print(f"\n[+ {FoundItem}]")
+        else:
+            print("\nThere is no room in your inventory. Would you like to discard something?")
+            count = 1
+            for Item in Player.Char.Inventory:
+                print(f"\n{count}. {Item.Name}")
+                if hasattr(Item, "Prefix"):
+                    print(f"{Item.Prefix.Name}: {Item.Prefix.Description}")
+                    print(f"{Item.Core.Name} {Item.Core.Description}")
+                else:
+                    print(f"{Item.Description}")
+            Discard = input(f"\nChoose a number or enter '0' to leave the {FoundItem.Name} where it is and move on... ")
+            while not Discard.isdigit() and Discard not in range(0, len(Player.Char.Inventory)+1):
+                Discard = input(f"\nPlease, choose a valid number or enter '0' to leave the {FoundItem.Name} where it is and move on... ")
+            if Discard == "0":
+                print(f"\nYou decide that you don't need the {FoundItem.Name}, and continue your journey.")
+                GoOn = input("Press 'Enter' to continue... ")
+            else:
+                Discard = int(Discard)
+                MinusBuff = remove_item_buff(Player.Char.Inventory[Discard-1])
+                print(f"[-{Player.Char.Inventory[Discard-1]}]")
+                Player.Char.Inventory.remove(Player.Char.Inventory[Discard-1])
+                ItemsKept += 1
+                Player.Char.Inventory.append(FoundItem)
+                PlusBuff = apply_item_buff(FoundItem)
+                print(f"\n[+{FoundItem.Name}]")
+                time.sleep(2)
+
+def apply_item_buff(Item):
+    if hasattr(Item, "Prefix"):
+        Player.Char.ItemEffects.append(Item)
+        match Item.Prefix.Stat:
+            case "str":
+                Player.Char.Str += Item.Prefix.Modifier
+                print(f"Applying buff for {Item.Name}: {Item.Prefix.Description}")
+            case "int":
+                Player.Char.Int += Item.Prefix.Modifier
+                print(f"Applying buff for {Item.Name}: {Item.Prefix.Description}")
+            case "fai":
+                Player.Char.Fai += Item.Prefix.Modifier
+                print(f"Applying buff for {Item.Name}: {Item.Prefix.Description}")
+        match Item.Core.Stat:
+            case "prot":
+                Player.Char.Prot += Item.Core.Modifier
+                print(f"Applying buff for {Item.Name}: {Item.Core.Description}")
+            case "dmg":
+                Player.Char.MinDmg += Item.Core.Modifier
+                Player.Char.MaxDmg += Item.Core.Modifier
+                print(f"Applying buff for {Item.Name}: {Item.Core.Description}")
+                print(f"Applying buff for {Item.Name}: {Item.Core.Description}")
+
+def remove_item_buff(Item):
+    if hasattr(Item, "Prefix"):
+        match Item.Prefix.Stat:
+            case "str":
+                Player.Char.Str -= Item.Prefix.Modifier
+                print(f"Removing buff for {Item.Name}: {Item.Prefix.Description}")
+            case "int":
+                Player.Char.Int -= Item.Prefix.Modifier
+                print(f"Removing buff for {Item.Name}: {Item.Prefix.Description}")
+            case "fai":
+                Player.Char.Fai -= Item.Prefix.Modifier
+                print(f"Removing buff for {Item.Name}: {Item.Prefix.Description}")
+        match Item.Core.Stat:
+            case "prot":
+                Player.Char.Prot -= Item.Core.Modifier
+                print(f"Removing buff for {Item.Name}: {Item.Core.Description}")
+            case "dmg":
+                Player.Char.MinDmg -= Item.Core.Modifier
+                Player.Char.MaxDmg -= Item.Core.Modifier
+                print(f"Removing buff for {Item.Name}: {Item.Core.Description}")
+                print(f"Removing buff for {Item.Name}: {Item.Core.Description}")
+        Player.Char.ItemEffects.remove(Item)
 
 def level_up():
     while Player.Char.Exp >= Player.Char.ToLevel:
@@ -737,7 +927,7 @@ def player_turn():
                 Monsters[int(Choice)-1].HP -= Dmg
                 if Monsters[int(Choice)-1].HP <= 0:
                     Player.Char.Exp += Monsters[Choice-1].Exp
-                    print(f"{Monsters[int(Choice)-1]} perished. [+{[Monsters.int(Choice)-1].Exp} exp]")
+                    print(f"{Monsters[int(Choice)-1]} perished. [+{Monsters[int(Choice)-1].Exp} exp")
                     CheckExp = level_up()
                     Monsters.remove(Monsters[int(Choice)-1])
                     if Player.Char.Vocation == "Necromancer" and Player.Char.Souls < Player.Char.MaxSouls:
@@ -1021,7 +1211,9 @@ def player_turn():
                     if LoseRoll <= 30:
                         LoseItem = random.random(0, len(Player.Char.Inventory))
                         print(f"In all the confusion you somehow lose the {LoseItem}")
-                        del LoseItem
+                        remove_item_buff(LoseItem)
+                        Player.Char.Inventory.remove(LoseItem)
+                        Player.Char.InventorySize -= 1
                         GoOn = input("Press 'Enter' to continue... ")
             else:
                 print("\nYou try to get away but fail to do so. ")
@@ -1039,7 +1231,7 @@ def monster_turn():
             if EvadeRoll < 10:
                 Evade = True
         if Evade == True:
-            print(f"{Element.Name} tries to hit {AllyList[Target-1]}, but they narrowly evade the oncoming strike.")
+            print(f"{Element.Name} tries to hit {AllyList[Target-1].Name}, but they narrowly evade the oncoming strike.")
             Evade = False
             time.sleep(2)
             continue
@@ -1271,17 +1463,14 @@ Prot: {Player.Char.Prot}""")
 def open_inventory():
     print(f"\nINVENTORY")
     Num = 1
-    for Item in Player.Char.Inventory:
-        if Item.Location == "heal" or Item.Location == "buff":
-            
-            print(f"\n{Num}. {Item.Name}")
-            if not hasattr(Item, "Prefix"):
-                print(f"{Item.Description} ")
-            else:
-                print(f"{Item.Prefix.Name}: {Item.Prefix.Description}")
-                print(f"{Item.Core.Name}: {Item.Core.Description}")
-                print(f"{Item.Postfix.Name}: {Item.Postfix.Description}")
-            Num += 1
+    for Item in Player.Char.Inventory:          
+        print(f"\n{Num}. {Item.Name}")
+        if not hasattr(Item, "Prefix"):
+            print(f"{Item.Description} ")
+        else:
+            print(f"{Item.Prefix.Name}: {Item.Prefix.Description}")
+            print(f"{Item.Core.Name}: {Item.Core.Description}")
+        Num += 1
     
     choice = input("Would you like to [d]iscard an item, [u]se one or go [b]ack? ")
     while choice != "d" and choice != "u" and choice != "b":
@@ -1313,7 +1502,8 @@ def open_inventory():
                 choice = input("\nYou don't have anything. Press 'Enter' to go back... ")
             else:
                 choice = input("\nWhat would you like to discard? Enter '0' to go back. ")
-                while choice not in range(0, Player.Char.InventorySize+1):
+                choice = int(choice)
+                while choice not in range(0, len(Player.Char.Inventory)+1):
                     choice = input("\nPlease, enter a valid number or '0' to go back... ")
                 if choice == "0":
                     open_inventory()
@@ -1323,10 +1513,11 @@ def open_inventory():
                     while sure != "y" and sure != "n":
                         sure = input("\fPlease, say either 'y' or 'n'... ")
                     if sure == "y":
+                        MinusBuff = remove_item_buff(Player.Char.Inventory[x-1])
                         print(f"\n{Player.Char.Inventory[x-1]} has been discarded.")
                         ToDelete = Player.Char.Inventory[x-1]
-                        Player.Char.Inventory.remove(Player.Char.Inventory[x-1])
-                        del ToDelete
+                        MinusBuff = remove_item_buff(ToDelete)
+                        Player.Char.Inventory.remove(ToDelete)
                         open_inventory()
 
 def choose_ability(Status):
@@ -1459,13 +1650,12 @@ def create_ally(Name, List):
                 Player.Char.Allies.append(Monster)
                 return
 
-def create_item(PrefixNum=None, CoreNum=None, PostfixNum=None):
-    if PrefixNum == None or CoreNum == None or PostfixNum == None:
+def create_item(PrefixNum=None, CoreNum=None):
+    if PrefixNum == None or CoreNum == None:
         PrefixNum = random.randint(0, len(Prefixes)-1)
         CoreNum = random.randint(0, len(Cores)-1)
-        PostfixNum = random.randint(0, len(Postfixes)-1)
 
-    NewItem = Item(Prefixes[PrefixNum], Cores[CoreNum], Postfixes[PostfixNum])
+    NewItem = Item(Prefixes[PrefixNum], Cores[CoreNum])
     print(f"{NewItem} was created!")
     return NewItem
 
