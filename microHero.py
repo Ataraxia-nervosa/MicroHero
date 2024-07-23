@@ -377,7 +377,7 @@ def main_menu():
         print("5. Quit the adventure")
 
         choice = input("\nWhat would you like to do? ")
-        while int(choice) not in range(1,7):
+        while not choice.isdigit() and int(choice) not in range(1,6):
             choice = input("\nPlease, pick a valid number... ")
         match choice:
             case "1":
@@ -909,6 +909,7 @@ def player_turn():
     for Element in Monsters:
         print(f"""\n{count}. {Element.Name}
               HP: {Element.HP} / {Element.MaxHP}""")
+        count += 1
     Choice = input("\nWould you like to [a]ttack, [u]se an item, use an a[b]ility or [r]etreat? ")
     while Choice not in ("a", "u", "b", "r"):
         Choice = input("\n[a]ttack, [u]se an item, use an a[b]ility or [r]etreat? ")
@@ -926,7 +927,7 @@ def player_turn():
                     AngryShout = False
                 Monsters[int(Choice)-1].HP -= Dmg
                 if Monsters[int(Choice)-1].HP <= 0:
-                    Player.Char.Exp += Monsters[Choice-1].Exp
+                    Player.Char.Exp += Monsters[int(Choice)-1].Exp
                     print(f"{Monsters[int(Choice)-1]} perished. [+{Monsters[int(Choice)-1].Exp} exp")
                     CheckExp = level_up()
                     Monsters.remove(Monsters[int(Choice)-1])
@@ -1337,6 +1338,10 @@ def use_ability(Ability):
                 time.sleep(2)
             return
         case "Rise and Fight":
+            if Player.Character.Souls == 0:
+                print("\nYou don't have any soul charges. ")
+                time.sleep(2)
+                return
             NewAlly = create_ally("Skeleton", "EnemyMolds")
             Player.Char.Souls -= 1
             return
@@ -1392,7 +1397,7 @@ def victory():
             case 3:
                 Reward = find_item("large")
 
-        Grab = CheckForSpace(Reward)
+        Grab = CheckForSpace(Reward, "found")
 
     GoOn = input("Press 'Enter' to continue... ")
     main_menu()
@@ -1627,6 +1632,7 @@ def create_monster(Tier=1, Amount=1):
         MonsterExp = int(Stats[17])
         Monster = Enemy(MonsterName, MonsterHP, MonsterVocation, MonsterStr, MonsterInt, MonsterFai, MonsterMinDmg, MonsterMaxDmg, MonsterProt, MonsterTier, MonsterExp)
         print(f"{Monster} joins the fray!") 
+        Monster.MaxHP = MonsterHP
         Monsters.append(Monster)
         Count += 1
 
